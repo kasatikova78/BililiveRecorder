@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.CommandLine.Builder;
 using System.CommandLine.NamingConventionBinder;
+using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -119,7 +121,41 @@ namespace BililiveRecorder.Cli
                 }
             }
 
-            return root.Invoke(args);
+            var builder = new CommandLineBuilder(root);
+
+            builder.AddMiddleware(async (context, next) =>
+            {
+                var isToolCommand = false;
+                var tct = typeof(ToolCommand);
+                var cr = context.ParseResult.CommandResult;
+                while (cr is not null)
+                {
+                    if (cr.Command.GetType() == tct)
+                    {
+                        isToolCommand = true;
+                        break;
+                    }
+                    cr = cr.Parent as CommandResult;
+                }
+                cr = null;
+
+                if (isToolCommand)
+                {
+                    // hack to enable logging for tool commands
+                    using var logger = BuildLogger(LogEventLevel.Fatal, LogEventLevel.Verbose);
+                    Log.Logger = logger;
+                    await next(context);
+                    return;
+                }
+                else
+                {
+                    await next(context);
+                }
+            });
+
+            builder.UseDefaults();
+            var parser = builder.Build();
+            return parser.Invoke(args);
         }
 
         private static async Task<int> RunConfigModeAsync(RunModeArguments args)
