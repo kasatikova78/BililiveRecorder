@@ -26,8 +26,8 @@ namespace BililiveRecorder.Flv.Pipeline.Rules
 
         private static readonly ProcessingComment MultipleHeaderComment = new ProcessingComment(CommentType.DecodingHeader, true, "收到了连续多个 Header，新建文件");
         private static readonly ProcessingComment SplitFileComment = new ProcessingComment(CommentType.DecodingHeader, true, "因为 Header 问题新建文件");
-        private static readonly ProcessingComment AnnexBCommentFirst = new ProcessingComment(CommentType.DecodingHeader, true, "检测到一次 AnnexB 格式");
-        private static readonly ProcessingComment AnnexBComment = new ProcessingComment(CommentType.DecodingHeader, true, "检测到 AnnexB 格式，不再切割文件");
+        private static readonly ProcessingComment AnnexBCommentFirst = new ProcessingComment(CommentType.DecodingHeader, false, "检测到一次 AnnexB 格式");
+        private static readonly ProcessingComment AnnexBComment = new ProcessingComment(CommentType.DecodingHeader, false, "检测到 AnnexB 格式，不再切割文件");
 
         private readonly bool disableSplitOnH264AnnexB;
 
