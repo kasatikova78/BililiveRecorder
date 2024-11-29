@@ -85,14 +85,14 @@ namespace BililiveRecorder.Core
             this.ct = this.cts.Token;
 
             this.PropertyChanged += this.Room_PropertyChanged;
-            this.RoomConfig.PropertyChanged += this.RoomConfig_PropertyChanged;
+            //this.RoomConfig.PropertyChanged += this.RoomConfig_PropertyChanged;
 
-            this.timer.Elapsed += this.Timer_Elapsed;
-
+            //this.timer.Elapsed += this.Timer_Elapsed;
+            /*
             this.danmakuClient.StatusChanged += this.DanmakuClient_StatusChanged;
             this.danmakuClient.DanmakuReceived += this.DanmakuClient_DanmakuReceived;
             this.danmakuClient.BeforeHandshake = this.DanmakuClient_BeforeHandshake;
-
+            */
             _ = Task.Run(async () =>
             {
                 await Task.Delay(1500 + (initDelayFactor * 500));
@@ -192,7 +192,7 @@ namespace BililiveRecorder.Core
                 // 如果直播状态从 false 改成 true，Room_PropertyChanged 会触发录制
                 await this.FetchRoomInfoAsync().ConfigureAwait(false);
 
-                this.StartDamakuConnection(delay: false);
+                //this.StartDamakuConnection(delay: false);
             }
             catch (Exception ex)
             {
@@ -207,6 +207,7 @@ namespace BililiveRecorder.Core
         {
             if (this.disposedValue)
                 return;
+            /*
             var room = (await this.apiClient.GetRoomInfoAsync(this.RoomConfig.RoomId).ConfigureAwait(false)).Data;
             if (room != null)
             {
@@ -227,6 +228,19 @@ namespace BililiveRecorder.Core
                 // allow danmaku client to connect
                 this.danmakuConnectHoldOff.Set();
             }
+            */
+
+            this.RoomConfig.RoomId = 1;
+            this.ShortId = 1;
+            this.Uid = 1;
+            this.Title = "1";
+            this.AreaNameParent = "1";
+            this.AreaNameChild = "1";
+            this.Streaming = true;
+
+            this.Name = "1";
+
+            this.RawBilibiliApiJsonData = new JObject();
         }
 
         private static readonly TimeSpan TitleRegexMatchTimeout = TimeSpan.FromSeconds(0.5);

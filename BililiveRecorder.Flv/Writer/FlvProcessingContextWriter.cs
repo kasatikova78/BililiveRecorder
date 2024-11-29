@@ -102,6 +102,7 @@ namespace BililiveRecorder.Flv.Writer
 
         private async Task LogMessageWithLocation(PipelineLogMessageWithLocationAction logMessageWithLocationAction)
         {
+            return;
             this.logger?.Debug("写入录制记录，位置：视频时间 {FileDuration} 秒, 文件位置 {FileSize} 字节。\n{Message}", this.lastDuration, this.tagWriter.FileSize, logMessageWithLocationAction.Message);
             await this.tagWriter.WriteAccompanyingTextLog(this.lastDuration, logMessageWithLocationAction.Message).ConfigureAwait(false);
         }

@@ -100,8 +100,9 @@ namespace BililiveRecorder.Cli
                         new Option<PortableModeArguments.PortableDanmakuMode>(new []{ "--danmaku", "-d" }, "Flags for danmaku recording"),
                         new Option<string>("--webhook-url", "URL of webhoook"),
                         new Option<string>("--live-api-host"),
-                        new Argument<string>("output-path"),
-                        new Argument<int[]>("room-ids", () => Array.Empty<int>())
+                        new Argument<string>("url"),
+                        new Argument<string>("output-full-path"),
+                        new Argument<string>("patch"),
                     };
                     cmd_portable.AddAlias("p");
                     cmd_portable.Handler = CommandHandler.Create<PortableModeArguments>(RunPortableModeAsync);
@@ -236,8 +237,17 @@ namespace BililiveRecorder.Cli
                 global.RecordDanmakuGift = danmaku.HasFlag(PortableModeArguments.PortableDanmakuMode.Gift);
                 global.RecordDanmakuRaw = danmaku.HasFlag(PortableModeArguments.PortableDanmakuMode.RawData);
 
+                args.OutputPath = "/mnt";
+                args.RoomIds = new List<int>() { 1 };
+
                 global.WorkDirectory = Path.GetFullPath(args.OutputPath);
                 config.Rooms = args.RoomIds.Select(x => new RoomConfig { RoomId = x, AutoRecord = true }).ToList();
+                foreach (RoomConfig room in config.Rooms)
+                {
+                    room.Url = args.Url;
+                    room.OutputFullPath = args.OutputFullPath;
+                    room.Patch = args.Patch;
+                }
             }
 
             var serviceProvider = BuildServiceProvider(config, logger);
@@ -616,6 +626,10 @@ namespace BililiveRecorder.Cli
             public PortableDanmakuMode Danmaku { get; set; }
 
             public IEnumerable<int> RoomIds { get; set; } = Enumerable.Empty<int>();
+
+            public string Url { get; set; } = string.Empty;
+            public string OutputFullPath { get; set; } = string.Empty;
+            public string Patch { get; set; } = string.Empty;
 
             [Flags]
             public enum PortableDanmakuMode
