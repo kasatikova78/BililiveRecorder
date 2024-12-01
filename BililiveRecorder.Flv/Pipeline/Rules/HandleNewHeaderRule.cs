@@ -17,7 +17,7 @@ namespace BililiveRecorder.Flv.Pipeline.Rules
         private const string AUDIO_HEADER_KEY = "HandleNewHeaderRule_AudioHeader";
         private const string ANNEXB_KEY = "HandleNewHeaderRule_AnnexB";
 
-        private enum AnnexBState
+        public enum AnnexBState
         {
             Unknown,
             Pending,
@@ -26,8 +26,8 @@ namespace BililiveRecorder.Flv.Pipeline.Rules
 
         private static readonly ProcessingComment MultipleHeaderComment = new ProcessingComment(CommentType.DecodingHeader, true, "收到了连续多个 Header，新建文件");
         private static readonly ProcessingComment SplitFileComment = new ProcessingComment(CommentType.DecodingHeader, true, "因为 Header 问题新建文件");
-        private static readonly ProcessingComment AnnexBCommentFirst = new ProcessingComment(CommentType.DecodingHeader, true, "检测到一次 AnnexB 格式");
-        private static readonly ProcessingComment AnnexBComment = new ProcessingComment(CommentType.DecodingHeader, true, "检测到 AnnexB 格式，不再切割文件");
+        private static readonly ProcessingComment AnnexBCommentFirst = new ProcessingComment(CommentType.DecodingHeader, false, "检测到一次 AnnexB 格式");
+        private static readonly ProcessingComment AnnexBComment = new ProcessingComment(CommentType.DecodingHeader, false, "检测到 AnnexB 格式，不再切割文件");
 
         private readonly bool disableSplitOnH264AnnexB;
 
@@ -42,12 +42,18 @@ namespace BililiveRecorder.Flv.Pipeline.Rules
             next();
         }
 
+        public static AnnexBState GetAnnexBState(FlvProcessingContext context)
+        {
+            if (context.SessionItems.TryGetValue(ANNEXB_KEY, out var annexBStateObj))
+                return annexBStateObj is AnnexBState annexBState ? annexBState : AnnexBState.Unknown;
+            return AnnexBState.Unknown;
+        }
+
         private IEnumerable<PipelineAction?> RunPerAction(FlvProcessingContext context, PipelineAction action)
         {
             if (this.disableSplitOnH264AnnexB)
             {
-                context.SessionItems.TryGetValue(ANNEXB_KEY, out var annexBStateObj);
-                var state = annexBStateObj is AnnexBState annexBState ? annexBState : AnnexBState.Unknown;
+                var state = GetAnnexBState(context);
 
                 if (state == AnnexBState.IsAnnexB)
                 {
@@ -56,6 +62,7 @@ namespace BililiveRecorder.Flv.Pipeline.Rules
                     yield break;
                 }
 
+                // 检测 Annex B 格式
                 if (action is PipelineDataAction data)
                 {
                     var annexb = false;
