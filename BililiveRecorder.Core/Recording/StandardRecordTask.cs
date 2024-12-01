@@ -203,8 +203,8 @@ namespace BililiveRecorder.Core.Recording
             catch (UnsupportedCodecException ex)
             {
                 // 直播流不是 H.264
-                this.logger.Warning(ex, "不支持此直播流的视频编码格式（只支持 H.264），本场直播不再自动启动录制。");
-                this.room.StopRecord(); // 停止自动重试
+                this.logger.Warning(ex, "不支持此直播流的视频编码格式（只支持 H.264），下次录制会尝试使用原始模式录制");
+                this.room.MarkNextRecordShouldUseRawMode();
             }
             catch (OperationCanceledException ex)
             {

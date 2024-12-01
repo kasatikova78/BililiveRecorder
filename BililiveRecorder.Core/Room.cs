@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BililiveRecorder.Core.Api;
+using BililiveRecorder.Core.Config;
 using BililiveRecorder.Core.Config.V3;
 using BililiveRecorder.Core.Danmaku;
 using BililiveRecorder.Core.Event;
@@ -54,6 +55,7 @@ namespace BililiveRecorder.Core
         private bool danmakuConnected;
         private bool streaming;
         private bool autoRecordForThisSession = true;
+        private bool nextRecordShouldUseRawMode = false;
 
         private IRecordTask? recordTask;
         private DateTimeOffset danmakuClientConnectTime;
@@ -229,6 +231,11 @@ namespace BililiveRecorder.Core
             }
         }
 
+        public void MarkNextRecordShouldUseRawMode()
+        {
+            this.nextRecordShouldUseRawMode = true;
+        }
+
         private static readonly TimeSpan TitleRegexMatchTimeout = TimeSpan.FromSeconds(0.5);
 
         /// <exception cref="ArgumentException" />
@@ -277,7 +284,9 @@ namespace BililiveRecorder.Core
                     this.logger.Warning(ex, "检查标题是否匹配跳过录制正则表达式时出错");
                 }
 
-                var task = this.recordTaskFactory.CreateRecordTask(this);
+                var task = this.recordTaskFactory.CreateRecordTask(this, this.nextRecordShouldUseRawMode ? RecordMode.RawData : null);
+                this.nextRecordShouldUseRawMode = false;
+
                 task.IOStats += this.RecordTask_IOStats;
                 task.RecordingStats += this.RecordTask_RecordingStats;
                 task.RecordFileOpening += this.RecordTask_RecordFileOpening;
@@ -516,7 +525,7 @@ namespace BililiveRecorder.Core
         {
             const int MAX_ATTEMPT = 3;
             var attempt = 0;
-retry:
+        retry:
             try
             {
                 var coverUrl = this.RawBilibiliApiJsonData?["room_info"]?["cover"]?.ToObject<string>();
