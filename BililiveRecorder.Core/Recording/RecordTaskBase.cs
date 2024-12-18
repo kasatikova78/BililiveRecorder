@@ -241,10 +241,15 @@ namespace BililiveRecorder.Core.Recording
             {
                 if (patch.Equals("Huya"))
                 {
+                    /*
                     headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0");
                     headers.Add("Origin", "https://www.huya.com");
                     headers.Add("Referer", "https://www.huya.com/");
                     headers.Add("Accept", HttpHeaderAccept);
+                    */
+                    headers.Clear();
+                    headers.Add("rtsp_transport", "tcp");
+                    headers.TryAddWithoutValidation("User-Agent", "HYSDK(Windows, 20000308)");
                 }
                 else
                 {
