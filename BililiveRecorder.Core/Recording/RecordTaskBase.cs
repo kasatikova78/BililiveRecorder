@@ -249,7 +249,7 @@ namespace BililiveRecorder.Core.Recording
                     */
                     headers.Clear();
                     headers.Add("rtsp_transport", "tcp");
-                    headers.TryAddWithoutValidation("User-Agent", "HYSDK(Windows, 20000308)");
+                    headers.TryAddWithoutValidation("User-Agent", "HYSDK(Windows, 21000308)");
                 }
                 else
                 {
