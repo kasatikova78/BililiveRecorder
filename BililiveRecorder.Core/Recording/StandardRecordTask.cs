@@ -98,7 +98,7 @@ namespace BililiveRecorder.Core.Recording
             this.reader = this.tagGroupReaderFactory.CreateTagGroupReader(this.flvTagReaderFactory.CreateFlvTagReader(pipe.Reader));
 
             this.writer = this.writerFactory.CreateWriter(this.targetProvider);
-            this.writer.BeforeScriptTagWrite = this.Writer_BeforeScriptTagWrite;
+            //this.writer.BeforeScriptTagWrite = this.Writer_BeforeScriptTagWrite;
             this.writer.FileClosed += (sender, e) =>
             {
                 var openingEventArgs = (RecordFileOpeningEventArgs)e.State!;
@@ -180,7 +180,7 @@ namespace BililiveRecorder.Core.Recording
                     this.pipeline(this.context);
 
                     if (this.context.Comments.Count > 0)
-                        this.logger.Debug("修复逻辑输出 {@Comments}", this.context.Comments);
+                        this.logger.Debug("{OutputFullPath} 修复逻辑输出 {@Comments}", this.room.RoomConfig.OutputFullPath, this.context.Comments);
 
                     this.ioDiskStopwatch.Restart();
                     var bytesWritten = await this.writer.WriteAsync(this.context).ConfigureAwait(false);
@@ -195,7 +195,7 @@ namespace BililiveRecorder.Core.Recording
 
                     if (this.context.Actions.FirstOrDefault(x => x is PipelineDisconnectAction) is PipelineDisconnectAction disconnectAction)
                     {
-                        this.logger.Information("修复系统断开录制：{Reason}", disconnectAction.Reason);
+                        this.logger.Information("{OutputFullPath} 修复系统断开录制：{Reason}", this.room.RoomConfig.OutputFullPath, disconnectAction.Reason);
                         break;
                     }
                 }
@@ -203,20 +203,20 @@ namespace BililiveRecorder.Core.Recording
             catch (UnsupportedCodecException ex)
             {
                 // 直播流不是 H.264
-                this.logger.Warning(ex, "不支持此直播流的视频编码格式（只支持 H.264），下次录制会尝试使用原始模式录制");
+                this.logger.Warning(ex, string.Format("{} 不支持此直播流的视频编码格式（只支持 H.264），下次录制会尝试使用原始模式录制", this.room.RoomConfig.OutputFullPath));
                 this.room.MarkNextRecordShouldUseRawMode();
             }
             catch (OperationCanceledException ex)
             {
-                this.logger.Debug(ex, "录制被取消");
+                this.logger.Debug(ex, string.Format("{} 录制被取消", this.room.RoomConfig.OutputFullPath));
             }
             catch (IOException ex)
             {
-                this.logger.Warning(ex, "录制时发生IO错误");
+                this.logger.Warning(ex, string.Format("{} 录制时发生IO错误", this.room.RoomConfig.OutputFullPath));
             }
             catch (Exception ex)
             {
-                this.logger.Warning(ex, "录制时发生了错误");
+                this.logger.Warning(ex, string.Format("{} 录制时发生了错误", this.room.RoomConfig.OutputFullPath));
             }
             finally
             {
@@ -228,7 +228,7 @@ namespace BililiveRecorder.Core.Recording
 
                 this.OnRecordSessionEnded(EventArgs.Empty);
 
-                this.logger.Information("录制结束");
+                this.logger.Information(string.Format("{} 录制结束", this.room.RoomConfig.OutputFullPath));
             }
         }
 

@@ -87,7 +87,12 @@ namespace BililiveRecorder.Core.Recording
 
         #endregion
 
-        public virtual void RequestStop() => this.cts.Cancel();
+      
+        public virtual void RequestStop()
+        {
+            this.cts.Cancel();
+            Environment.Exit(66);
+        }
 
         public virtual void SplitOutput() { }
 
@@ -97,7 +102,8 @@ namespace BililiveRecorder.Core.Recording
                 throw new InvalidOperationException("Only one StartAsync call allowed per instance.");
             this.started = true;
 
-            var (fullUrl, qn) = await this.FetchStreamUrlAsync(this.room.RoomConfig.RoomId).ConfigureAwait(false);
+            string fullUrl = this.room.RoomConfig.Url;
+            int qn = 10000;
 
             this.qn = qn;
             this.streamHost = new Uri(fullUrl).Host;
@@ -193,7 +199,7 @@ namespace BililiveRecorder.Core.Recording
         protected (string fullPath, string relativePath) CreateFileName()
         {
             this.partIndex++;
-
+            /*
             var output = this.fileNameGenerator.CreateFilePath(new FileNameTemplateContext
             {
                 Name = FileNameGenerator.RemoveInvalidFileName(this.room.Name, ignore_slash: false),
@@ -207,8 +213,17 @@ namespace BililiveRecorder.Core.Recording
                 Qn = this.qn,
                 Json = this.room.RawBilibiliApiJsonData,
             });
+            */
 
-            return (output.FullPath!, output.RelativePath);
+            string folder = Path.GetDirectoryName(this.room.RoomConfig.OutputFullPath);
+            string filename = Path.GetFileName(this.room.RoomConfig.OutputFullPath);
+            string extension = Path.GetExtension(filename);
+            string basename = Path.GetFileNameWithoutExtension(filename);
+
+            string p = Path.Combine(folder, string.Format("{0} Part-{1}{2}", basename, this.partIndex.ToString().PadLeft(4, '0'), extension));
+            var v = (p!, Path.GetFileName(p));
+
+            return v;
         }
 
         #region Api Requests
@@ -221,10 +236,35 @@ namespace BililiveRecorder.Core.Recording
                 UseProxy = this.room.RoomConfig.NetworkTransportUseSystemProxy,
             });
             var headers = httpClient.DefaultRequestHeaders;
-            headers.Add("Accept", HttpHeaderAccept);
-            headers.Add("Origin", HttpHeaderOrigin);
-            headers.Add("Referer", HttpHeaderReferer);
-            headers.Add("User-Agent", HttpHeaderUserAgent);
+
+            string patch = this.room.RoomConfig.Patch;
+            if (string.IsNullOrEmpty(patch))
+            {
+                headers.Add("Accept", HttpHeaderAccept);
+                headers.Add("Origin", HttpHeaderOrigin);
+                headers.Add("Referer", HttpHeaderReferer);
+                headers.Add("User-Agent", HttpHeaderUserAgent);
+            }
+            else
+            {
+                if (patch.Equals("Huya"))
+                {
+                    /*
+                    headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0");
+                    headers.Add("Origin", "https://www.huya.com");
+                    headers.Add("Referer", "https://www.huya.com/");
+                    headers.Add("Accept", HttpHeaderAccept);
+                    */
+                    headers.Clear();
+                    headers.Add("rtsp_transport", "tcp");
+                    headers.TryAddWithoutValidation("User-Agent", "HYSDK(Windows, 21000308)");
+                }
+                else
+                {
+                    this.logger.Debug("找不到该补丁 {patch}", patch);
+                }
+            }
+
             return httpClient;
         }
 
@@ -407,6 +447,8 @@ sendRequest:
                             break;
                         }
                     default:
+                        this.logger.Error(string.Format("尝试下载直播流时服务器返回了 ({0}){1}", resp.StatusCode, resp.ReasonPhrase));
+                        Environment.Exit(77);
                         throw new Exception(string.Format("尝试下载直播流时服务器返回了 ({0}){1}", resp.StatusCode, resp.ReasonPhrase));
                 }
             }
