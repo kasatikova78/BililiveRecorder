@@ -50,6 +50,7 @@ namespace BililiveRecorder.Core.Recording
                    apiClient: apiClient,
                    userScriptRunner: userScriptRunner)
         {
+            room.RoomConfig.FlvProcessorDisableSplitOnH264AnnexB = true;
             this.flvTagReaderFactory = flvTagReaderFactory ?? throw new ArgumentNullException(nameof(flvTagReaderFactory));
             this.tagGroupReaderFactory = tagGroupReaderFactory ?? throw new ArgumentNullException(nameof(tagGroupReaderFactory));
             this.writerFactory = writerFactory ?? throw new ArgumentNullException(nameof(writerFactory));
